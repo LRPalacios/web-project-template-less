@@ -57,7 +57,7 @@ module.exports = function() {
             json: require('./bower.json'),
             directory: './bower_components/',
             ignorePath: '../..',
-            exclude: config.bower.exclude
+            exclude: []
         },
         packages : [
             './package.json',
@@ -77,7 +77,7 @@ module.exports = function() {
             bowerJson: config.bower.json,
             directory: config.bower.directory,
             ignorePath: config.bower.ignorePath,
-            exclude: [],
+            exclude: config.bower.exclude,
         };
         return options;
     };
