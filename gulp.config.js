@@ -21,7 +21,6 @@ module.exports = function() {
         css: temp + 'styles.css',
         fonts: './bower_components/font-awesome/fonts/**/*.*',
         html: clientApp + '**/*.html',
-        htmltemplates: clientApp + '**/*.html',
         images: client + 'images/**/*.*',
         index: client + 'index.html',
         js: [
@@ -41,18 +40,6 @@ module.exports = function() {
         optimized: {
             app: 'app.js',
             lib: 'lib.js'
-        },
-
-        /**
-         * template cache
-         */
-        templateCache: {
-            file: 'templates.js',
-            options: {
-                module: 'app.core',
-                standAlone: false,
-                root: 'app/'
-            }
         },
 
         /**

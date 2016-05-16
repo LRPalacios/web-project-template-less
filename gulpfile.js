@@ -69,30 +69,8 @@ gulp.task('clean-styles', function(done) {
     clean(config.temp + '**/*.css', done);
 });
 
-gulp.task('clean-code', function(done) {
-    var files = [].concat(
-        config.temp + '**/*.js',
-        config.build + '**/*.html',
-        config.build + 'js/**/*.js'
-    );
-    clean(files, done);
-});
-
 gulp.task('less-watcher', function() {
     gulp.watch([config.less], ['styles']);
-});
-
-gulp.task('templatecache', ['clean-code'], function() {
-    log('Creating AngularJS $templateCache');
-
-    return gulp
-        .src(config.htmltemplates)
-        .pipe($.minifyHtml({empty: true}))
-        .pipe($.angularTemplatecache(
-            config.templateCache.file,
-            config.templateCache.options
-            ))
-        .pipe(gulp.dest(config.temp));
 });
 
 gulp.task('wiredep', function() {
@@ -107,7 +85,7 @@ gulp.task('wiredep', function() {
         .pipe(gulp.dest(config.client));
 });
 
-gulp.task('inject', ['wiredep', 'styles', 'templatecache'], function() {
+gulp.task('inject', ['wiredep', 'styles'], function() {
     log('Wire up the app css into the html, and call wiredep ');
 
     return gulp
@@ -133,7 +111,6 @@ gulp.task('optimize', ['inject'], function() {
     log('Optimizing the javascript, css, html');
 
     var assets = $.useref.assets({searchPath: './'});
-    var templateCache = config.temp + config.templateCache.file;
     var cssFilter = $.filter('**/*.css');
     var jsLibFilter = $.filter('**/' + config.optimized.lib);
     var jsAppFilter = $.filter('**/' + config.optimized.app);
@@ -141,10 +118,6 @@ gulp.task('optimize', ['inject'], function() {
     return gulp
         .src(config.index)
         .pipe($.plumber())
-        .pipe($.inject(
-            gulp.src(templateCache, {read: false}), {
-            starttag: '<!-- inject:templates:js -->'
-        }))
         .pipe(assets)
         .pipe(cssFilter)
         .pipe($.csso())
