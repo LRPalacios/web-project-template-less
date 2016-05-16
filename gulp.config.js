@@ -29,6 +29,9 @@ module.exports = function() {
             '!' + clientApp + '**/*.spec.js'
         ],
         less: client + 'styles/styles.less',
+        lessFiles: [
+          client + 'styles/*.less'  
+        ],
         report: report,
         root: root,
         server: server,
