@@ -1,12 +1,11 @@
 {
-  "name": "Pluralsight-Gulp",
+  "name": "Starter template",
   "version": "0.1.0",
-  "description": "Starter Code for Pluralsight Course JavaScript Build Automation with Gulp.js",
+  "description": "Starter code for and SPA application with javaScript build automation with gulp.js",
   "authors": [
-    "John Papa"
+    "Luis Palacios"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/johnpapa/pluralsight-gulp",
   "ignore": [
     "**/.*",
     "node_modules",
