@@ -70,7 +70,7 @@ gulp.task('clean-styles', function(done) {
 });
 
 gulp.task('less-watcher', function() {
-    gulp.watch([config.less], ['styles']);
+    gulp.watch([config.lessFiles], ['styles']);
 });
 
 gulp.task('wiredep', function() {
@@ -175,6 +175,9 @@ gulp.task('serve-dev', ['inject'], function() {
     serve(true /* isDev */);
 });
 
+gulp.task('sync', ['inject'], function() {
+    startBrowserSync(true);
+});
 
 ////////////
 
@@ -234,10 +237,10 @@ function startBrowserSync(isDev) {
     log('Starting browser-sync on port ' + port);
 
     if (isDev) {
-        gulp.watch([config.less, config.lessFiles], ['styles'])
+        gulp.watch([config.lessFiles], ['styles'])
             .on('change', changeEvent);
     } else {
-        gulp.watch([config.less,config.lessFiles, config.js, config.html], ['optimize', browserSync.reload])
+        gulp.watch([config.lessFiles, config.js, config.html], ['optimize', browserSync.reload])
             .on('change', changeEvent);
     }
 
@@ -246,7 +249,7 @@ function startBrowserSync(isDev) {
         port: 3000,
         files: isDev ? [
             config.client + '**/*.*',
-            '!' + config.less,
+            '!' + config.lessFiles,
             config.temp + '**/*.css'
         ] : [],
         ghostMode: {

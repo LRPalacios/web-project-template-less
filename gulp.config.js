@@ -1,4 +1,4 @@
-module.exports = function() {
+module.exports = function () {
     var client = './src/client/';
     var clientApp = client + 'app/';
     var report = './report/';
@@ -6,7 +6,9 @@ module.exports = function() {
     var server = './src/server/';
     var temp = './.tmp/';
     var wiredep = require('wiredep');
-    var bowerFiles = wiredep({devDependencies: true})['js'];
+    var bowerFiles = wiredep({
+        devDependencies: true
+    })['js'];
 
     var config = {
         /**
@@ -19,7 +21,10 @@ module.exports = function() {
         build: './build/',
         client: client,
         css: temp + 'styles.css',
-        fonts: './bower_components/font-awesome/fonts/**/*.*',
+        fonts: [
+            './bower_components/font-awesome/fonts/**/*.*',
+            './bower_components/bootstrap/fonts/**/*.*'
+        ],
         html: clientApp + '**/*.html',
         images: client + 'images/**/*.*',
         index: client + 'index.html',
@@ -30,7 +35,7 @@ module.exports = function() {
         ],
         less: client + 'styles/styles.less',
         lessFiles: [
-          client + 'styles/*.less'  
+            client + 'styles/*.less'
         ],
         report: report,
         root: root,
@@ -57,9 +62,9 @@ module.exports = function() {
             json: require('./bower.json'),
             directory: './bower_components/',
             ignorePath: '../..',
-            exclude: []
+            // exclude: []
         },
-        packages : [
+        packages: [
             './package.json',
             './bower.json'
         ],
@@ -72,12 +77,12 @@ module.exports = function() {
 
     };
 
-    config.getWiredepDefaultOptions = function() {
+    config.getWiredepDefaultOptions = function () {
         var options = {
             bowerJson: config.bower.json,
             directory: config.bower.directory,
             ignorePath: config.bower.ignorePath,
-            exclude: config.bower.exclude,
+            //exclude: config.bower.exclude,
         };
         return options;
     };

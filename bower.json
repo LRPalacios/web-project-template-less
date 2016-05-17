@@ -12,10 +12,24 @@
     "node_modules",
     "bower_components"
   ],
-  "devDependencies": {
-  
-  },
+  "devDependencies": {},
   "dependencies": {
-
+  },
+  "overrides": {
+    "bootstrap": {
+      "main": [
+        "dist/css/bootstrap.css",
+        "dist/js/bootstrap.min.js"
+      ]
+    },
+    "font-awesome": {
+      "main": [
+        "css/font-awesome.css",
+        "fonts/fontawesome-webfont.eot",
+        "fonts/fontawesome-webfont.woff",
+        "fonts/fontawesome-webfont.ttf",
+        "fonts/fontawesome-webfont.svg"
+      ]
+    }
   }
 }
