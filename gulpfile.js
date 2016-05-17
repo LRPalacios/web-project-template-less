@@ -69,30 +69,8 @@ gulp.task('clean-styles', function(done) {
     clean(config.temp + '**/*.css', done);
 });
 
-gulp.task('clean-code', function(done) {
-    var files = [].concat(
-        config.temp + '**/*.js',
-        config.build + '**/*.html',
-        config.build + 'js/**/*.js'
-    );
-    clean(files, done);
-});
-
 gulp.task('less-watcher', function() {
-    gulp.watch([config.less], ['styles']);
-});
-
-gulp.task('templatecache', ['clean-code'], function() {
-    log('Creating AngularJS $templateCache');
-
-    return gulp
-        .src(config.htmltemplates)
-        .pipe($.minifyHtml({empty: true}))
-        .pipe($.angularTemplatecache(
-            config.templateCache.file,
-            config.templateCache.options
-            ))
-        .pipe(gulp.dest(config.temp));
+    gulp.watch([config.lessFiles], ['styles']);
 });
 
 gulp.task('wiredep', function() {
@@ -107,7 +85,7 @@ gulp.task('wiredep', function() {
         .pipe(gulp.dest(config.client));
 });
 
-gulp.task('inject', ['wiredep', 'styles', 'templatecache'], function() {
+gulp.task('inject', ['wiredep', 'styles'], function() {
     log('Wire up the app css into the html, and call wiredep ');
 
     return gulp
@@ -129,45 +107,10 @@ gulp.task('build', ['optimize', 'images', 'fonts'], function() {
     notify(msg);
 });
 
-gulp.task('serve-specs', ['build-specs'], function(done) {
-    log('run the spec runner');
-    serve(true /* isDev */, true /* specRunner */);
-    done();
-});
-
-gulp.task('build-specs', ['templatecache'], function() {
-    log('building the spec runner');
-
-    var wiredep = require('wiredep').stream;
-    var options = config.getWiredepDefaultOptions();
-    var specs = config.specs;
-
-    options.devDependencies = true;
-
-    if (args.startServers) {
-        specs = [].concat(specs, config.serverIntegrationSpecs);
-    }
-
-    return gulp
-        .src(config.specRunner)
-        .pipe(wiredep(options))
-        .pipe($.inject(gulp.src(config.testlibraries),
-            {name: 'inject:testlibraries', read: false}))
-        .pipe($.inject(gulp.src(config.js)))
-        .pipe($.inject(gulp.src(config.specHelpers),
-            {name: 'inject:spechelpers', read: false}))
-        .pipe($.inject(gulp.src(specs),
-            {name: 'inject:specs', read: false}))
-        .pipe($.inject(gulp.src(config.temp + config.templateCache.file),
-            {name: 'inject:templates', read: false}))
-        .pipe(gulp.dest(config.client));
-});
-
-gulp.task('optimize', ['inject', 'test'], function() {
+gulp.task('optimize', ['inject'], function() {
     log('Optimizing the javascript, css, html');
 
     var assets = $.useref.assets({searchPath: './'});
-    var templateCache = config.temp + config.templateCache.file;
     var cssFilter = $.filter('**/*.css');
     var jsLibFilter = $.filter('**/' + config.optimized.lib);
     var jsAppFilter = $.filter('**/' + config.optimized.app);
@@ -175,10 +118,6 @@ gulp.task('optimize', ['inject', 'test'], function() {
     return gulp
         .src(config.index)
         .pipe($.plumber())
-        .pipe($.inject(
-            gulp.src(templateCache, {read: false}), {
-            starttag: '<!-- inject:templates:js -->'
-        }))
         .pipe(assets)
         .pipe(cssFilter)
         .pipe($.csso())
@@ -236,17 +175,13 @@ gulp.task('serve-dev', ['inject'], function() {
     serve(true /* isDev */);
 });
 
-gulp.task('test', ['vet', 'templatecache'], function(done) {
-    startTests(true /* singleRun */, done);
-});
-
-gulp.task('autotest', ['vet', 'templatecache'], function(done) {
-    startTests(false /* singleRun */, done);
+gulp.task('sync', ['inject'], function() {
+    startBrowserSync(true);
 });
 
 ////////////
 
-function serve(isDev, specRunner) {
+function serve(isDev) {
     var nodeOptions = {
         script: config.nodeServer,
         delayTime: 1,
@@ -268,7 +203,7 @@ function serve(isDev, specRunner) {
         })
         .on('start', function() {
             log('*** nodemon started');
-            startBrowserSync(isDev, specRunner);
+            startBrowserSync(isDev);
         })
         .on('crash', function() {
             log('*** nodemon crashed: script crashed for some reason');
@@ -294,7 +229,7 @@ function notify(options) {
     notifier.notify(notifyOptions);
 }
 
-function startBrowserSync(isDev, specRunner) {
+function startBrowserSync(isDev) {
     if (args.nosync || browserSync.active) {
         return;
     }
@@ -302,10 +237,10 @@ function startBrowserSync(isDev, specRunner) {
     log('Starting browser-sync on port ' + port);
 
     if (isDev) {
-        gulp.watch([config.less], ['styles'])
+        gulp.watch([config.lessFiles], ['styles'])
             .on('change', changeEvent);
     } else {
-        gulp.watch([config.less, config.js, config.html], ['optimize', browserSync.reload])
+        gulp.watch([config.lessFiles, config.js, config.html], ['optimize', browserSync.reload])
             .on('change', changeEvent);
     }
 
@@ -314,7 +249,7 @@ function startBrowserSync(isDev, specRunner) {
         port: 3000,
         files: isDev ? [
             config.client + '**/*.*',
-            '!' + config.less,
+            '!' + config.lessFiles,
             config.temp + '**/*.css'
         ] : [],
         ghostMode: {
@@ -331,50 +266,7 @@ function startBrowserSync(isDev, specRunner) {
         reloadDelay: 0 //1000
     };
 
-    if (specRunner) {
-        options.startPath = config.specRunnerFile;
-    }
-
     browserSync(options);
-}
-
-function startTests(singleRun, done) {
-    var child;
-    var fork = require('child_process').fork;
-    var karma = require('karma').server;
-    var excludeFiles = [];
-    var serverSpecs = config.serverIntegrationSpecs; //TODO
-
-    if (args.startServers) { // gulp test --startServers
-        log('Starting server');
-        var savedEnv = process.env;
-        savedEnv.NODE_ENV = 'dev';
-        savedEnv.PORT = 8888;
-        child = fork(config.nodeServer);
-    } else {
-        if (serverSpecs && serverSpecs.length) {
-            excludeFiles = serverSpecs;
-        }
-    }
-
-    karma.start({
-        configFile: __dirname + '/karma.conf.js',
-        exclude: excludeFiles,
-        singleRun: !!singleRun
-    }, karmaCompleted);
-
-    function karmaCompleted(karmaResult) {
-        log('Karma completed!');
-        if (child) {
-            log('Shutting down the child process');
-            child.kill();
-        }
-        if (karmaResult === 1) {
-            done('karma: tests failed with code ' + karmaResult);
-        } else {
-            done();
-        }
-    }
 }
 
 function clean(path, done) {
