@@ -94,6 +94,8 @@ gulp.task('inject', ['wiredep', 'styles'], function() {
         .pipe(gulp.dest(config.client));
 });
 
+gulp.task('inject-watch', ['inject'], browserSync.reload);
+
 gulp.task('build', ['optimize', 'images', 'fonts'], function() {
     log('Building everything');
 
@@ -239,6 +241,7 @@ function startBrowserSync(isDev) {
     if (isDev) {
         gulp.watch([config.lessFiles], ['styles'])
             .on('change', changeEvent);
+        gulp.watch([config.js], ['inject-watch']);
     } else {
         gulp.watch([config.lessFiles, config.js, config.html], ['optimize', browserSync.reload])
             .on('change', changeEvent);
